@@ -27,6 +27,7 @@ export default async function BibliotecaPage({ searchParams }: Props) {
 
   let posts: BibliotecaPost[] = []
   let userPlan = 'free'
+  let isAdmin = false
 
   if (DEMO_MODE) {
     posts = demoBibliotecaPosts as BibliotecaPost[]
@@ -44,12 +45,13 @@ export default async function BibliotecaPage({ searchParams }: Props) {
           .order('created_at', { ascending: false }),
         supabase
           .from('profiles')
-          .select('plan')
+          .select('plan, role')
           .eq('id', user.id)
           .single(),
       ])
       posts = (postsResult.data ?? []) as BibliotecaPost[]
       userPlan = profileResult.data?.plan ?? 'free'
+      isAdmin = profileResult.data?.role === 'admin'
     }
   }
 
@@ -101,7 +103,7 @@ export default async function BibliotecaPage({ searchParams }: Props) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((post) => (
-            <PostCard key={post.id} post={post} userPlan={userPlan} />
+            <PostCard key={post.id} post={post} userPlan={userPlan} isAdmin={isAdmin} />
           ))}
         </div>
       )}

@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { BibliotecaPost } from '@/lib/types/database'
-import { Code2, Image, FileText, Lock } from 'lucide-react'
+import { Code2, Image, FileText, Lock, Pencil } from 'lucide-react'
 
 interface Props {
   post: BibliotecaPost
   userPlan: string
+  isAdmin?: boolean
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -34,7 +35,7 @@ function isLocked(userPlan: string, planRequired: 'basic' | 'pro'): boolean {
   return true
 }
 
-export function PostCard({ post, userPlan }: Props) {
+export function PostCard({ post, userPlan, isAdmin }: Props) {
   const colorClass = CATEGORY_COLORS[post.category] ?? CATEGORY_COLORS['Geral']
   const blockCount = post.blocks?.length ?? 0
   const locked = isLocked(userPlan, post.plan_required)
@@ -120,8 +121,20 @@ export function PostCard({ post, userPlan }: Props) {
   if (locked) return card
 
   return (
-    <Link href={`/dashboard/biblioteca/${post.id}`}>
-      {card}
-    </Link>
+    <div className="relative group/wrap">
+      <Link href={`/dashboard/biblioteca/${post.id}`}>
+        {card}
+      </Link>
+      {isAdmin && (
+        <Link
+          href={`/dashboard/admin/biblioteca/${post.id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="absolute top-2 right-2 z-10 w-7 h-7 bg-[#111]/80 border border-white/[0.12] rounded-lg flex items-center justify-center opacity-0 group-hover/wrap:opacity-100 transition-opacity hover:bg-brand/20 hover:border-brand/40"
+          title="Editar post"
+        >
+          <Pencil className="h-3.5 w-3.5 text-white/60 hover:text-brand" />
+        </Link>
+      )}
+    </div>
   )
 }

@@ -10,7 +10,6 @@ import {
   Settings,
   LogOut,
   Wand2,
-  ShieldCheck,
   FileSignature,
   Lock,
 } from 'lucide-react'
@@ -38,14 +37,6 @@ const navItems = [
   {
     label: 'Biblioteca',
     href: '/dashboard/biblioteca',
-    icon: Library,
-  },
-]
-
-const adminItems = [
-  {
-    label: 'Gerenciar Biblioteca',
-    href: '/dashboard/admin/biblioteca',
     icon: Library,
   },
 ]
@@ -141,36 +132,6 @@ export function SidebarNav({ role, plan }: Props) {
           </div>
         )}
 
-        {/* Seção Admin */}
-        {isAdmin && (
-          <div className="pt-4">
-            <div className="flex items-center gap-2 px-3 pb-2">
-              <ShieldCheck className="h-3 w-3 text-white/20" />
-              <span className="text-[10px] font-semibold text-white/20 uppercase tracking-widest">Admin</span>
-            </div>
-            {adminItems.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
-                    isActive
-                      ? 'bg-brand/[0.12] text-white'
-                      : 'text-white/40 hover:text-white/80 hover:bg-white/[0.04]'
-                  )}
-                >
-                  {isActive && (
-                    <span className="absolute left-3 w-0.5 h-4 bg-brand rounded-full" />
-                  )}
-                  <item.icon className={cn('h-4 w-4 flex-shrink-0', isActive ? 'text-brand' : 'text-current')} />
-                  <span className="flex-1">{item.label}</span>
-                </Link>
-              )
-            })}
-          </div>
-        )}
       </nav>
 
       {/* Bottom */}

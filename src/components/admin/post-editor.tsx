@@ -6,7 +6,7 @@ import { BibliotecaBlock, BibliotecaBlockType, BibliotecaCategory, BibliotecaPos
 import { BlockEditor } from '@/components/admin/block-editor'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { PlusCircle, Loader2, Eye, EyeOff } from 'lucide-react'
+import { PlusCircle, Loader2, Eye, EyeOff, Upload, ImageIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { DEMO_MODE } from '@/lib/demo-data'
 
@@ -46,11 +46,26 @@ export function PostEditor({ post }: Props) {
   const [tags, setTags] = useState(post?.tags?.join(', ') ?? '')
   const [planRequired, setPlanRequired] = useState<'basic' | 'pro'>(post?.plan_required ?? 'basic')
   const [published, setPublished] = useState(post?.published ?? false)
+  const [coverUrl, setCoverUrl] = useState(post?.cover_url ?? '')
+  const [uploadingCover, setUploadingCover] = useState(false)
   const [blocks, setBlocks] = useState<DraftBlock[]>(
     post?.blocks?.map((b) => ({ ...b, _tempId: genId() })) ?? [newBlock()]
   )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  async function handleCoverUpload(file: File) {
+    setUploadingCover(true)
+    const supabase = createClient()
+    const ext = file.name.split('.').pop()
+    const path = `covers/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { data, error } = await supabase.storage.from('biblioteca').upload(path, file, { cacheControl: '3600', upsert: false })
+    if (!error && data) {
+      const { data: { publicUrl } } = supabase.storage.from('biblioteca').getPublicUrl(data.path)
+      setCoverUrl(publicUrl)
+    }
+    setUploadingCover(false)
+  }
 
   function addBlock() {
     setBlocks((prev) => [...prev, newBlock()])
@@ -89,7 +104,7 @@ export function PostEditor({ post }: Props) {
     if (isEditing && post) {
       const { error: postError } = await supabase
         .from('biblioteca_posts')
-        .update({ title, description: description || null, category, tags: tagsArr, plan_required: planRequired, published: shouldPublish, updated_at: new Date().toISOString() })
+        .update({ title, description: description || null, category, tags: tagsArr, plan_required: planRequired, published: shouldPublish, cover_url: coverUrl || null, updated_at: new Date().toISOString() })
         .eq('id', post.id)
 
       if (postError) {
@@ -103,7 +118,7 @@ export function PostEditor({ post }: Props) {
     } else {
       const { data: newPost, error: postError } = await supabase
         .from('biblioteca_posts')
-        .insert({ title, description: description || null, category, tags: tagsArr, plan_required: planRequired, published: shouldPublish })
+        .insert({ title, description: description || null, category, tags: tagsArr, plan_required: planRequired, published: shouldPublish, cover_url: coverUrl || null })
         .select()
         .single()
 
@@ -199,6 +214,53 @@ export function PostEditor({ post }: Props) {
               placeholder="dark-mode, botão, hover"
               className="w-full px-3 py-2.5 rounded-md bg-[#252525] border border-white/[0.1] text-white placeholder:text-white/25 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             />
+          </div>
+        </div>
+
+        {/* Capa */}
+        <div className="space-y-1">
+          <Label className="text-white/70 text-sm">Imagem de capa <span className="text-white/30">(opcional)</span></Label>
+          <div className="flex gap-3 items-start">
+            {coverUrl ? (
+              <div className="relative w-24 h-16 rounded-lg overflow-hidden border border-white/[0.1] flex-shrink-0">
+                <img src={coverUrl} alt="Capa" className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="w-24 h-16 rounded-lg border border-dashed border-white/[0.12] flex items-center justify-center flex-shrink-0 bg-[#0d0d0d]">
+                <ImageIcon className="h-5 w-5 text-white/15" />
+              </div>
+            )}
+            <div className="flex-1 space-y-2">
+              <label className="block">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleCoverUpload(file)
+                  }}
+                />
+                <div className={`flex items-center justify-center gap-2 px-3 py-2 rounded-md border text-sm cursor-pointer transition-all ${
+                  uploadingCover
+                    ? 'border-white/[0.1] text-white/25 bg-[#252525]'
+                    : 'border-brand/30 text-brand/70 bg-brand/5 hover:bg-brand/10 hover:border-brand/50'
+                }`}>
+                  {uploadingCover ? (
+                    <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Enviando...</>
+                  ) : (
+                    <><Upload className="h-3.5 w-3.5" /> {coverUrl ? 'Trocar capa' : 'Upload de capa'}</>
+                  )}
+                </div>
+              </label>
+              <input
+                type="url"
+                value={coverUrl}
+                onChange={(e) => setCoverUrl(e.target.value)}
+                placeholder="ou cole uma URL..."
+                className="w-full px-3 py-2 rounded-md bg-[#252525] border border-white/[0.1] text-white placeholder:text-white/25 text-xs focus:outline-none focus:ring-1 focus:ring-brand"
+              />
+            </div>
           </div>
         </div>
 
