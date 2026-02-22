@@ -12,10 +12,12 @@ import { Loader2 } from 'lucide-react'
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [stayConnected, setStayConnected] = useState(true)
 
   async function handleSubmit(formData: FormData) {
     setLoading(true)
     setError(null)
+    formData.set('stayConnected', stayConnected ? 'true' : 'false')
     const result = await login(formData)
     if (result?.error) {
       setError(result.error)
@@ -68,8 +70,35 @@ export default function LoginPage() {
               className="bg-[#252525] border-white/[0.1] text-white placeholder:text-white/35"
             />
           </div>
+
+          {/* Stay connected */}
+          <div className="flex items-center gap-2.5 pt-1">
+            <button
+              type="button"
+              role="checkbox"
+              aria-checked={stayConnected}
+              onClick={() => setStayConnected((v) => !v)}
+              className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all ${
+                stayConnected
+                  ? 'bg-brand border-brand'
+                  : 'bg-transparent border-white/25 hover:border-white/50'
+              }`}
+            >
+              {stayConnected && (
+                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                  <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </button>
+            <label
+              onClick={() => setStayConnected((v) => !v)}
+              className="text-sm text-white/55 cursor-pointer select-none"
+            >
+              Deixar conectado
+            </label>
+          </div>
         </CardContent>
-        <CardFooter className="flex flex-col gap-4">
+        <CardFooter className="flex flex-col gap-4 pt-2">
           <Button
             type="submit"
             className="w-full bg-brand hover:bg-brand text-white"
